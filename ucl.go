@@ -293,7 +293,7 @@ const object_error int = 0
 const object_en_main int = 1
 
 
-//line ucl.rl:100
+//line ucl.rl:104
 
 
 func parse_object(data []rune, p int, pe int) (Value, int, error) {
@@ -313,7 +313,7 @@ func parse_object(data []rune, p int, pe int) (Value, int, error) {
 	cs = object_start
 	}
 
-//line ucl.rl:114
+//line ucl.rl:118
 
 //line ucl.go:319
 	{
@@ -425,10 +425,14 @@ _match:
 		case 3:
 //line ucl.rl:87
 
-		key = Key{Value: json_unescape(string(data[start+1:p])), Index: index}
+		s, err := json_unescape(string(data[start+1:p]))
+		if err != nil {
+			return nil, -1, err
+		}
+		key = Key{Value: s, Index: index}
 		index++
 	
-//line ucl.go:432
+//line ucl.go:436
 		}
 	}
 
@@ -444,7 +448,7 @@ _again:
 	_out: {}
 	}
 
-//line ucl.rl:115
+//line ucl.rl:119
 
 	if cs >= object_first_final {
 		return ret, p, nil
@@ -454,7 +458,7 @@ _again:
 
 //go:generate sh -c "ragel -Z -S array -V -p ucl.rl | dot -Tpng > array.png"
 
-//line ucl.go:458
+//line ucl.go:462
 var _array_actions []byte = []byte{
 	0, 1, 0, 1, 1, 
 }
@@ -506,7 +510,7 @@ const array_error int = 0
 const array_en_main int = 1
 
 
-//line ucl.rl:141
+//line ucl.rl:145
 
 
 func parse_array(data []rune, p int, pe int) (Value, int, error) {
@@ -518,14 +522,14 @@ func parse_array(data []rune, p int, pe int) (Value, int, error) {
 	_ = eof
 
 
-//line ucl.go:522
+//line ucl.go:526
 	{
 	cs = array_start
 	}
 
-//line ucl.rl:152
+//line ucl.rl:156
 
-//line ucl.go:529
+//line ucl.go:533
 	{
 	var _klen int
 	var _trans int
@@ -549,7 +553,7 @@ _resume:
  p--
  p++; goto _out
  
-//line ucl.go:553
+//line ucl.go:557
 		}
 	}
 
@@ -619,7 +623,7 @@ _match:
 		_acts++
 		switch _array_actions[_acts-1] {
 		case 1:
-//line ucl.rl:127
+//line ucl.rl:131
 
 		v, newp, err := parse_value(data, p, pe);
 		if err != nil { return nil, -1, err };
@@ -627,7 +631,7 @@ _match:
 		p = ( newp) - 1
 
 	
-//line ucl.go:631
+//line ucl.go:635
 		}
 	}
 
@@ -643,7 +647,7 @@ _again:
 	_out: {}
 	}
 
-//line ucl.rl:153
+//line ucl.rl:157
 
 	if cs >= array_first_final {
 		return ret, p, nil
@@ -653,7 +657,7 @@ _again:
 
 //go:generate sh -c "ragel -Z -S value -V -p ucl.rl | dot -Tpng > value.png"
 
-//line ucl.go:657
+//line ucl.go:661
 var _value_actions []byte = []byte{
 	0, 1, 0, 1, 1, 1, 2, 1, 3, 
 	1, 4, 1, 5, 1, 6, 1, 7, 
@@ -741,7 +745,7 @@ const value_error int = 0
 const value_en_main int = 1
 
 
-//line ucl.rl:205
+//line ucl.rl:213
 
 
 func parse_value(data []rune, p int, pe int) (Value, int, error) {
@@ -753,14 +757,14 @@ func parse_value(data []rune, p int, pe int) (Value, int, error) {
 	)
 
 
-//line ucl.go:757
+//line ucl.go:761
 	{
 	cs = value_start
 	}
 
-//line ucl.rl:216
+//line ucl.rl:224
 
-//line ucl.go:764
+//line ucl.go:768
 	{
 	var _klen int
 	var _trans int
@@ -784,7 +788,7 @@ _resume:
  p--
  p++; goto _out
  
-//line ucl.go:788
+//line ucl.go:792
 		}
 	}
 
@@ -859,7 +863,7 @@ _match:
 		return nil, -1, fmt.Errorf("parse error at byte %d (state=%d)", p, cs)
 	
 		case 2:
-//line ucl.rl:165
+//line ucl.rl:169
 
 		v, newp, err := parse_object(data, p, pe);
 		if err != nil { return nil, -1, err };
@@ -868,7 +872,7 @@ _match:
 
 	
 		case 3:
-//line ucl.rl:172
+//line ucl.rl:176
 
 		v, newp, err := parse_array(data, p, pe);
 		if err != nil { return nil, -1, err };
@@ -877,7 +881,7 @@ _match:
 
 	
 		case 4:
-//line ucl.rl:179
+//line ucl.rl:183
 
 		v, newp, err := parse_number(data, p, pe)
 		if err != nil { return nil, -1, err };
@@ -886,25 +890,29 @@ _match:
 
 	
 		case 5:
-//line ucl.rl:186
+//line ucl.rl:190
 
 		start = p
 	
 		case 6:
-//line ucl.rl:190
+//line ucl.rl:194
 
-		ret = &String{Value: json_unescape(string(data[start+1:p]))}
+		s, err := json_unescape(string(data[start+1:p]))
+		if err != nil {
+			return nil, -1, err
+		}
+		ret = &String{Value: s}
 	
 		case 7:
-//line ucl.rl:194
+//line ucl.rl:202
 ret = &Bool{Value: false}
 		case 8:
-//line ucl.rl:195
+//line ucl.rl:203
 ret = &Bool{Value: true}
 		case 9:
-//line ucl.rl:196
+//line ucl.rl:204
 ret = &Null{}
-//line ucl.go:908
+//line ucl.go:916
 		}
 	}
 
@@ -928,7 +936,7 @@ _again:
 
 		return nil, -1, fmt.Errorf("parse error at byte %d (state=%d)", p, cs)
 	
-//line ucl.go:932
+//line ucl.go:940
 			}
 		}
 	}
@@ -936,7 +944,7 @@ _again:
 	_out: {}
 	}
 
-//line ucl.rl:217
+//line ucl.rl:225
 	if cs >= value_first_final {
 		return ret, p, nil
 	}
@@ -945,7 +953,7 @@ _again:
 
 //go:generate sh -c "ragel -Z -S document -V -p ucl.rl | dot -Tpng > document.png"
 
-//line ucl.go:949
+//line ucl.go:957
 var _document_actions []byte = []byte{
 	0, 1, 0, 1, 1, 1, 2, 
 }
@@ -992,7 +1000,7 @@ const document_error int = 0
 const document_en_main int = 1
 
 
-//line ucl.rl:250
+//line ucl.rl:258
 
 
 func parse_json(data []rune) (Value, int, error) {
@@ -1005,14 +1013,14 @@ func parse_json(data []rune) (Value, int, error) {
 	var ret Value
 
 
-//line ucl.go:1009
+//line ucl.go:1017
 	{
 	cs = document_start
 	}
 
-//line ucl.rl:262
+//line ucl.rl:270
 
-//line ucl.go:1016
+//line ucl.go:1024
 	{
 	var _klen int
 	var _trans int
@@ -1096,7 +1104,7 @@ _match:
 		return nil, -1, fmt.Errorf("parse error at byte %d (state=%d)", p, cs)
 	
 		case 1:
-//line ucl.rl:228
+//line ucl.rl:236
 
 		v, newp, err := parse_object(data, p, pe);
 		if err != nil { return nil, -1, err };
@@ -1105,7 +1113,7 @@ _match:
 
 	
 		case 2:
-//line ucl.rl:235
+//line ucl.rl:243
 
 		v, newp, err := parse_array(data, p, pe);
 		if err != nil { return nil, -1, err };
@@ -1113,7 +1121,7 @@ _match:
 		p = ( newp) - 1
 
 	
-//line ucl.go:1117
+//line ucl.go:1125
 		}
 	}
 
@@ -1137,7 +1145,7 @@ _again:
 
 		return nil, -1, fmt.Errorf("parse error at byte %d (state=%d)", p, cs)
 	
-//line ucl.go:1141
+//line ucl.go:1149
 			}
 		}
 	}
@@ -1145,7 +1153,7 @@ _again:
 	_out: {}
 	}
 
-//line ucl.rl:263
+//line ucl.rl:271
 
 	return ret, -1, nil
 }
